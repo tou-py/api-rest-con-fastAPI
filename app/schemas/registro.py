@@ -32,5 +32,5 @@ class RegistroUpdate(BaseModel):
 
     fecha: date | None
     tipo: str | None
-    descripion: str | None
+    descripcion: str | None
     color: str | None
