@@ -58,9 +58,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         Crea un nuevo registro a partir de un modelo
         """
-
-        # Se hace la comparacion con base model porque los esquemas son de tipos genericos
-        # y no se puede verificar su tipo en tiempo de ejecucion
         if not obj_in or not isinstance(obj_in, BaseModel):
             app_logger.error(f"ERROR: datos no proporcionados o no válidos. \n{obj_in}")
             raise ValueError("Datos no proporcionados o no válidos")

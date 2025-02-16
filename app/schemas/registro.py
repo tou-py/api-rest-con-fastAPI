@@ -1,5 +1,15 @@
 from datetime import date
 from pydantic import BaseModel
+from typing import Generic, TypeVar, Optional, List
+
+T = TypeVar("T")
+
+
+class APIResponse(BaseModel, Generic[T]):
+    data: Optional[T] = None
+    message: str
+    status_code: int
+    pagination: Optional[dict] = None
 
 
 class RegistroCreate(BaseModel):
