@@ -1,17 +1,29 @@
-from sqlmodel import SQLModel, create_engine, Session
+from typing import AsyncGenerator
+from sqlmodel import SQLModel
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from .config import settings
 
+DATABASE_URL = settings.DATABASE_URL
 
-# Con esto se crea el motor de la base de datos
-engine = create_engine(settings.DATABASE_URL, echo=True)
+# Crea un motor de base de datos asincrono
+engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+
+# crea una sesion
+async_session = async_sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
-# Obtener la sesion de la base de datos
-def get_session():
-    with Session(engine) as session:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session() as session:
         yield session
 
 
-# Si no existen, crea las tablas de la base de datos
-def create_db():
-    SQLModel.metadata.create_all(engine)
+async def create_db():
+    """
+    Crea la base de datos y sus tablas de forma asincrona
+    """
+    async with engine.begin() as connection:
+        await connection.run_sync(SQLModel.metadata.create_all)

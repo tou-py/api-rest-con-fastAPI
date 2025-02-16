@@ -1,8 +1,9 @@
-from typing import Type, TypeVar, Generic, Optional
-from sqlmodel import Session, select, SQLModel
+from typing import Type, TypeVar, Generic, Optional, List
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import select, SQLModel
 from pydantic import BaseModel
 
-# Tipos genericos para modelos y esquemas
+# Tipos genéricos para modelos y esquemas
 ModelType = TypeVar("ModelType", bound=SQLModel)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
@@ -11,56 +12,59 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         """
-        Inicializa el CRUD con el modelo especifico
+        Inicializa el CRUD con el modelo específico
         """
         self.model = model
 
-    def create(self, session: Session, obj_in: CreateSchemaType) -> ModelType:
+    async def create(
+        self, session: AsyncSession, obj_in: CreateSchemaType
+    ) -> ModelType:
         """
-        Crea un nuevo registro en la base de datos
+        Crea un nuevo registro a partir de un modelo
         """
-        db_obj = self.model(**obj_in.model_dump())
-        session.add(db_obj)
-        session.commit()
-        session.refresh(db_obj)
-        return db_obj
+        db_objt = self.model(**obj_in.model_dump())
+        session.add(db_objt)
+        await session.commit()
+        await session.refresh(db_objt)
+        return db_objt
 
-    def get(self, session: Session, id: int) -> Optional[ModelType]:
+    async def get(self, session: AsyncSession, id: int) -> Optional[ModelType]:
         """
         Obtiene un registro por su ID
         """
-        return session.get(self.model, id)
+        return await session.get(self.model, id)
 
-    def get_all(
-        self, session: Session, skip: int = 0, limit: int = 100
-    ) -> list[ModelType]:
+    async def get_all(
+        self, session: AsyncSession, skip: int = 0, limit: int = 100
+    ) -> List[ModelType]:
         """
-        Obtiene todos los registros con paginacion
+        Obtiene todos los registros con paginación.
         """
-        return session.exec(select(self.model).offset(skip).limit(limit)).all()
+        result = await session.scalars(select(self.model).offset(skip).limit(limit))
+        return result.all()  # Extrae y devuelve los objetos
 
-    def update(
-        self, session: Session, db_obj: ModelType, obj_in: UpdateSchemaType
+    async def update(
+        self, session: AsyncSession, db_obj: ModelType, obj_in: UpdateSchemaType
     ) -> ModelType:
         """
         Actualiza un registro existente
         """
         obj_data = obj_in.model_dump(
             exclude_unset=True
-        )  # Solo los campos que proporcionados
+        )  # Solo los campos proporcionados
         for key, value in obj_data.items():
             setattr(db_obj, key, value)
         session.add(db_obj)
-        session.commit()
-        session.refresh(db_obj)
+        await session.commit()
+        await session.refresh(db_obj)
         return db_obj
 
-    def delete(self, session: Session, id: int) -> Optional[ModelType]:
+    async def delete(self, session: AsyncSession, id: int) -> Optional[ModelType]:
         """
         Elimina un registro por su ID
         """
-        db_obj = session.get(self.model, id)
+        db_obj = await session.get(self.model, id)
         if db_obj:
-            session.delete(db_obj)
-            session.commit()
+            await session.delete(db_obj)
+            await session.commit()
         return db_obj
