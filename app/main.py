@@ -2,12 +2,15 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.api.v1.endpoints import registro
 from app.database import create_db
+from app.core.logger import app_logger
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app_logger.info("Iniciando aplicacion...")
     await create_db()
     yield
+    app_logger.info("Aplicacion cerrada correctamente.")
 
 
 app = FastAPI(lifespan=lifespan)
