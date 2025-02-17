@@ -1,7 +1,8 @@
 from typing import AsyncGenerator
 from sqlmodel import SQLModel
+from app.models.usuario import Usuario
+from app.models.registro import Registro
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from .config import settings
 
