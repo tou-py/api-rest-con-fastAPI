@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
+from typing import List
 from app.crud.registro import registro_crud
 from app.models.registro import Registro
 from app.schemas.registro import (
@@ -9,7 +10,6 @@ from app.schemas.registro import (
     APIResponse,
 )
 from app.database import get_session
-from typing import List
 
 router = APIRouter()
 
